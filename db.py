@@ -36,6 +36,7 @@ def init_db():
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         user_id INTEGER,
         username TEXT,
+        phone TEXT,
         items_text TEXT,
         subtotal INTEGER,
         vendor_code TEXT,
@@ -43,6 +44,7 @@ def init_db():
         discount_amount INTEGER,
         shipping_method TEXT,
         shipping_cost INTEGER,
+        shipping_cod INTEGER DEFAULT 0,
         total INTEGER,
         province TEXT,
         city TEXT,
@@ -50,6 +52,13 @@ def init_db():
         status TEXT DEFAULT 'awaiting_receipt',
         receipt_file_id TEXT,
         created_at TEXT
+    )""")
+    c.execute("""CREATE TABLE IF NOT EXISTS order_items(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        order_id INTEGER,
+        product_name TEXT,
+        qty INTEGER,
+        price_each INTEGER
     )""")
     conn.commit()
 
@@ -116,7 +125,7 @@ def update_price(product_id, new_price):
     conn.close()
 
 
-# ---------- vendors ----------
+# ---------- vendors (= فروشنده‌ها) ----------
 def list_vendors():
     conn = get_conn()
     rows = conn.execute("SELECT * FROM vendors ORDER BY id").fetchall()
@@ -174,18 +183,25 @@ def deactivate_discount(code):
 def create_order(data):
     conn = get_conn()
     cur = conn.execute(
-        """INSERT INTO orders(user_id, username, items_text, subtotal, vendor_code, discount_code,
-           discount_amount, shipping_method, shipping_cost, total, province, city, address, status, created_at)
-           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+        """INSERT INTO orders(user_id, username, phone, items_text, subtotal, vendor_code, discount_code,
+           discount_amount, shipping_method, shipping_cost, shipping_cod, total, province, city, address,
+           status, created_at)
+           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
         (
-            data["user_id"], data["username"], data["items_text"], data["subtotal"], data.get("vendor_code"),
-            data.get("discount_code"), data.get("discount_amount", 0), data["shipping_method"],
-            data["shipping_cost"], data["total"], data["province"], data["city"], data["address"],
+            data["user_id"], data["username"], data.get("phone", ""), data["items_text"], data["subtotal"],
+            data.get("vendor_code"), data.get("discount_code"), data.get("discount_amount", 0),
+            data["shipping_method"], data["shipping_cost"], int(data.get("shipping_cod", False)),
+            data["total"], data["province"], data["city"], data["address"],
             "awaiting_receipt", datetime.now().strftime("%Y-%m-%d %H:%M"),
         ),
     )
-    conn.commit()
     order_id = cur.lastrowid
+    for item in data.get("items", []):
+        conn.execute(
+            "INSERT INTO order_items(order_id, product_name, qty, price_each) VALUES (?,?,?,?)",
+            (order_id, item["name"], item["qty"], item["price"]),
+        )
+    conn.commit()
     conn.close()
     return order_id
 
@@ -211,6 +227,16 @@ def get_order(order_id):
     return row
 
 
+def pending_orders():
+    """Carts that were created (card info shown) but never got a receipt / never got resolved."""
+    conn = get_conn()
+    rows = conn.execute(
+        "SELECT * FROM orders WHERE status='awaiting_receipt' ORDER BY id DESC"
+    ).fetchall()
+    conn.close()
+    return rows
+
+
 def vendor_orders(vendor_code):
     conn = get_conn()
     rows = conn.execute(
@@ -218,3 +244,40 @@ def vendor_orders(vendor_code):
     ).fetchall()
     conn.close()
     return rows
+
+
+def get_stats():
+    conn = get_conn()
+    confirmed = conn.execute("SELECT * FROM orders WHERE status='confirmed'").fetchall()
+    count = len(confirmed)
+    total_toman = sum(o["total"] for o in confirmed)
+
+    # top vendor by attributed sales (subtotal of orders using their code)
+    vendor_totals = {}
+    for o in confirmed:
+        if o["vendor_code"]:
+            vendor_totals[o["vendor_code"]] = vendor_totals.get(o["vendor_code"], 0) + o["subtotal"]
+    top_vendor_code, top_vendor_amount = (None, 0)
+    if vendor_totals:
+        top_vendor_code = max(vendor_totals, key=vendor_totals.get)
+        top_vendor_amount = vendor_totals[top_vendor_code]
+    top_vendor_row = get_vendor_by_code(top_vendor_code) if top_vendor_code else None
+
+    # top product by quantity sold, across confirmed orders only
+    rows = conn.execute(
+        """SELECT oi.product_name AS name, SUM(oi.qty) AS qty
+           FROM order_items oi JOIN orders o ON o.id = oi.order_id
+           WHERE o.status='confirmed'
+           GROUP BY oi.product_name ORDER BY qty DESC LIMIT 1"""
+    ).fetchone()
+    conn.close()
+
+    return {
+        "order_count": count,
+        "total_toman": total_toman,
+        "top_vendor_name": top_vendor_row["name"] if top_vendor_row else None,
+        "top_vendor_code": top_vendor_code,
+        "top_vendor_amount": top_vendor_amount,
+        "top_product_name": rows["name"] if rows else None,
+        "top_product_qty": rows["qty"] if rows else 0,
+    }

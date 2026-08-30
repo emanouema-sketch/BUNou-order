@@ -27,22 +27,49 @@ ADMIN_CHAT_ID = os.environ.get("ADMIN_CHAT_ID", "")
 CARD_NUMBER = os.environ.get("CARD_NUMBER", "6037-XXXX-XXXX-XXXX")
 CARD_HOLDER = os.environ.get("CARD_HOLDER_NAME", "نام صاحب حساب")
 
-PROVINCES = [
-    "تهران", "البرز", "اصفهان", "فارس", "خراسان رضوی", "آذربایجان شرقی", "آذربایجان غربی",
-    "خوزستان", "مازندران", "گیلان", "کرمان", "کرمانشاه", "یزد", "هرمزگان", "سیستان و بلوچستان",
-    "گلستان", "اردبیل", "قزوین", "قم", "زنجان", "همدان", "لرستان", "مرکزی", "بوشهر",
-    "چهارمحال و بختیاری", "کهگیلویه و بویراحمد", "ایلام", "کردستان", "سمنان",
-    "خراسان شمالی", "خراسان جنوبی",
-]
-SHIPPING = {
-    "post": {"label": "پست پیشتاز (سراسر ایران)", "cost": 45000},
-    "courier": {"label": "پیک موتوری (فقط تهران)", "cost": 60000},
+OTHER_CITY = "🏙 شهر دیگر (تایپ می‌کنم)"
+
+# Major cities per province. Not a literally exhaustive list of every town —
+# customers can always pick "شهر دیگر" and type their city by hand.
+CITIES = {
+    "تهران": ["تهران", "شهریار", "اسلام‌شهر", "ری", "پاکدشت", "ورامین", "دماوند", "رباط‌کریم", "پردیس", "قدس"],
+    "البرز": ["کرج", "فردیس", "نظرآباد", "اشتهارد", "طالقان", "هشتگرد"],
+    "اصفهان": ["اصفهان", "کاشان", "نجف‌آباد", "خمینی‌شهر", "شاهین‌شهر", "نطنز", "اردستان", "فولادشهر", "مبارکه", "گلپایگان"],
+    "فارس": ["شیراز", "مرودشت", "جهرم", "کازرون", "فسا", "لار", "داراب", "آباده", "فیروزآباد", "اقلید"],
+    "خراسان رضوی": ["مشهد", "نیشابور", "سبزوار", "تربت‌حیدریه", "کاشمر", "قوچان", "تربت‌جام", "چناران", "سرخس", "گناباد"],
+    "آذربایجان شرقی": ["تبریز", "مراغه", "میانه", "مرند", "اهر", "سراب", "بناب", "شبستر", "آذرشهر", "جلفا"],
+    "آذربایجان غربی": ["ارومیه", "خوی", "میاندوآب", "بوکان", "مهاباد", "سلماس", "پیرانشهر", "نقده", "ماکو", "سردشت"],
+    "خوزستان": ["اهواز", "آبادان", "خرمشهر", "دزفول", "بندر ماهشهر", "شوشتر", "اندیمشک", "بهبهان", "شوش", "ایذه"],
+    "مازندران": ["ساری", "بابل", "آمل", "قائم‌شهر", "بهشهر", "تنکابن", "رامسر", "نوشهر", "چالوس", "بابلسر"],
+    "گیلان": ["رشت", "بندر انزلی", "لاهیجان", "لنگرود", "آستارا", "تالش", "رودسر", "صومعه‌سرا", "فومن", "ماسال"],
+    "کرمان": ["کرمان", "رفسنجان", "سیرجان", "بم", "جیرفت", "زرند", "شهربابک", "کهنوج", "بردسیر", "راور"],
+    "کرمانشاه": ["کرمانشاه", "اسلام‌آباد غرب", "سنقر", "پاوه", "صحنه", "جوانرود", "سرپل‌ذهاب", "هرسین", "کنگاور", "قصرشیرین"],
+    "یزد": ["یزد", "میبد", "اردکان", "بافق", "تفت", "ابرکوه", "مهریز", "بهاباد"],
+    "هرمزگان": ["بندرعباس", "میناب", "بندرلنگه", "قشم", "رودان", "جاسک", "حاجی‌آباد", "کیش"],
+    "سیستان و بلوچستان": ["زاهدان", "زابل", "چابهار", "ایرانشهر", "سراوان", "خاش", "کنارک", "نیک‌شهر"],
+    "گلستان": ["گرگان", "گنبد کاووس", "علی‌آباد کتول", "آق‌قلا", "کردکوی", "بندر ترکمن", "مینودشت", "آزادشهر"],
+    "اردبیل": ["اردبیل", "مشکین‌شهر", "پارس‌آباد", "خلخال", "گرمی", "بیله‌سوار", "نمین", "نیر"],
+    "قزوین": ["قزوین", "تاکستان", "البرز", "آبیک", "بویین‌زهرا", "محمدیه"],
+    "قم": ["قم", "سلفچگان", "جعفریه", "کهک"],
+    "زنجان": ["زنجان", "ابهر", "قیدار", "ماهنشان", "طارم", "خرمدره"],
+    "همدان": ["همدان", "ملایر", "نهاوند", "تویسرکان", "اسدآباد", "کبودراهنگ", "رزن", "بهار"],
+    "لرستان": ["خرم‌آباد", "بروجرد", "دورود", "الیگودرز", "کوهدشت", "ازنا", "الشتر", "پلدختر"],
+    "مرکزی": ["اراک", "ساوه", "خمین", "محلات", "دلیجان", "شازند", "تفرش", "آشتیان"],
+    "بوشهر": ["بوشهر", "برازجان", "گناوه", "کنگان", "دیر", "دیلم", "جم", "عسلویه"],
+    "چهارمحال و بختیاری": ["شهرکرد", "بروجن", "فارسان", "لردگان", "کیار", "اردل"],
+    "کهگیلویه و بویراحمد": ["یاسوج", "گچساران", "دهدشت", "سی‌سخت", "لیکک"],
+    "ایلام": ["ایلام", "دهلران", "آبدانان", "دره‌شهر", "ایوان", "مهران", "چرداول"],
+    "کردستان": ["سنندج", "سقز", "مریوان", "بانه", "قروه", "بیجار", "کامیاران", "دیواندره"],
+    "سمنان": ["سمنان", "شاهرود", "دامغان", "گرمسار", "مهدی‌شهر", "ایوانکی"],
+    "خراسان شمالی": ["بجنورد", "شیروان", "اسفراین", "آشخانه", "فاروج", "جاجرم"],
+    "خراسان جنوبی": ["بیرجند", "قاین", "فردوس", "طبس", "نهبندان", "سربیشه"],
 }
+PROVINCES = list(CITIES.keys())
 
 (
     SELECT_PRODUCTS, ASK_VENDOR_CHOICE, ASK_VENDOR_CODE, ASK_DISCOUNT_CHOICE, ASK_DISCOUNT_CODE,
-    ASK_PROVINCE, ASK_CITY, ASK_ADDRESS, ASK_SHIPPING, CONFIRM, WAIT_RECEIPT,
-) = range(11)
+    ASK_PROVINCE, ASK_CITY, ASK_ADDRESS, ASK_PHONE, ASK_SHIPPING, CONFIRM, WAIT_RECEIPT,
+) = range(12)
 
 
 def toman(n):
@@ -84,6 +111,13 @@ def products_keyboard(cart):
     return InlineKeyboardMarkup(rows)
 
 
+def shipping_cost_for(province, method):
+    """Returns (cost, is_cash_on_delivery)."""
+    if method == "courier":
+        return 0, True  # پس‌کرایه: پرداخت نقدی به پیک هنگام تحویل
+    return (45000 if province == "تهران" else 120000), False
+
+
 # ---------------- START ----------------
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.user_data.clear()
@@ -114,7 +148,7 @@ async def select_products(update: Update, context: ContextTypes.DEFAULT_TYPE):
             [[InlineKeyboardButton("بله، کد فروش دارم", callback_data="vendor_yes"),
               InlineKeyboardButton("خیر", callback_data="vendor_no")]]
         )
-        await query.message.reply_text("آیا کد فروش (کد ویزیتور) دارید؟", reply_markup=keyboard)
+        await query.message.reply_text("آیا کد فروش (کد فروشنده) دارید؟", reply_markup=keyboard)
         return ASK_VENDOR_CHOICE
 
     pid = int(query.data.split(":")[1])
@@ -123,7 +157,7 @@ async def select_products(update: Update, context: ContextTypes.DEFAULT_TYPE):
     return SELECT_PRODUCTS
 
 
-# ---------------- VENDOR CODE ----------------
+# ---------------- VENDOR (فروشنده) CODE ----------------
 async def ask_vendor_choice(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
@@ -191,9 +225,9 @@ async def skip_discount(update: Update, context: ContextTypes.DEFAULT_TYPE):
     return await ask_province_entry(update.message, context)
 
 
-# ---------------- ADDRESS ----------------
+# ---------------- ADDRESS: PROVINCE -> CITY -> FULL ADDRESS -> PHONE ----------------
 async def ask_province_entry(message, context: ContextTypes.DEFAULT_TYPE):
-    rows = [PROVINCES[i:i + 3] for i in range(0, len(PROVINCES), 3)]
+    rows = [PROVINCES[i:i + 2] for i in range(0, len(PROVINCES), 2)]
     keyboard = ReplyKeyboardMarkup(rows, one_time_keyboard=True, resize_keyboard=True)
     await message.reply_text("استان محل تحویل را انتخاب کنید:", reply_markup=keyboard)
     return ASK_PROVINCE
@@ -205,22 +239,58 @@ async def ask_province(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("لطفا یکی از استان‌های نمایش داده‌شده را انتخاب کنید.")
         return ASK_PROVINCE
     context.user_data["province"] = province
-    await update.message.reply_text("نام شهر را بنویسید:", reply_markup=ReplyKeyboardRemove())
+    context.user_data["manual_city_mode"] = False
+
+    cities = CITIES[province] + [OTHER_CITY]
+    rows = [cities[i:i + 2] for i in range(0, len(cities), 2)]
+    keyboard = ReplyKeyboardMarkup(rows, one_time_keyboard=True, resize_keyboard=True)
+    await update.message.reply_text(f"شهر خود را در استان {province} انتخاب کنید:", reply_markup=keyboard)
     return ASK_CITY
 
 
 async def ask_city(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    context.user_data["city"] = update.message.text.strip()
-    await update.message.reply_text("آدرس دقیق (خیابان، پلاک، واحد) را بنویسید:")
+    text = update.message.text.strip()
+
+    if context.user_data.get("manual_city_mode"):
+        context.user_data["city"] = text
+        context.user_data["manual_city_mode"] = False
+        await update.message.reply_text("آدرس دقیق (خیابان، پلاک، واحد) را بنویسید:", reply_markup=ReplyKeyboardRemove())
+        return ASK_ADDRESS
+
+    if text == OTHER_CITY:
+        context.user_data["manual_city_mode"] = True
+        await update.message.reply_text("نام شهر خود را تایپ کنید:", reply_markup=ReplyKeyboardRemove())
+        return ASK_CITY
+
+    province = context.user_data.get("province")
+    if province and text not in CITIES.get(province, []):
+        await update.message.reply_text("لطفا یکی از شهرهای نمایش داده‌شده را انتخاب کنید، یا «شهر دیگر» را بزنید.")
+        return ASK_CITY
+
+    context.user_data["city"] = text
+    await update.message.reply_text("آدرس دقیق (خیابان، پلاک، واحد) را بنویسید:", reply_markup=ReplyKeyboardRemove())
     return ASK_ADDRESS
 
 
 async def ask_address(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.user_data["address"] = update.message.text.strip()
+    await update.message.reply_text("شماره تلفن همراه خود را وارد کنید (مثلا 09123456789):")
+    return ASK_PHONE
+
+
+async def ask_phone(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    phone = update.message.text.strip()
+    digits = phone.replace(" ", "").replace("-", "")
+    if not digits.isdigit() or len(digits) < 10:
+        await update.message.reply_text("شماره تلفن معتبر به نظر نمی‌رسد. دوباره وارد کنید (مثلا 09123456789):")
+        return ASK_PHONE
+    context.user_data["phone"] = digits
+
     province = context.user_data["province"]
-    buttons = [[InlineKeyboardButton(f"{SHIPPING['post']['label']} — {toman(SHIPPING['post']['cost'])}", callback_data="ship:post")]]
+    post_cost, _ = shipping_cost_for(province, "post")
+    buttons = [[InlineKeyboardButton(f"پست پیشتاز — {toman(post_cost)}", callback_data="ship:post")]]
     if province == "تهران":
-        buttons.append([InlineKeyboardButton(f"{SHIPPING['courier']['label']} — {toman(SHIPPING['courier']['cost'])}", callback_data="ship:courier")])
+        buttons.append([InlineKeyboardButton("پیک موتوری (پس‌کرایه، در محل پرداخت می‌شود)", callback_data="ship:courier")])
     await update.message.reply_text("روش ارسال را انتخاب کنید:", reply_markup=InlineKeyboardMarkup(buttons))
     return ASK_SHIPPING
 
@@ -230,26 +300,35 @@ async def ask_shipping(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
     method = query.data.split(":")[1]
+    province = context.user_data["province"]
+    shipping_cost, is_cod = shipping_cost_for(province, method)
+
     context.user_data["shipping_method"] = method
+    context.user_data["shipping_cost"] = shipping_cost
+    context.user_data["shipping_cod"] = is_cod
 
     cart = context.user_data["cart"]
     subtotal = cart_subtotal(cart)
     discount_amount = context.user_data.get("discount_amount", 0)
-    shipping_cost = SHIPPING[method]["cost"]
     total = subtotal - discount_amount + shipping_cost
     context.user_data["subtotal"] = subtotal
-    context.user_data["shipping_cost"] = shipping_cost
     context.user_data["total"] = total
+
+    shipping_label = "پست پیشتاز" if method == "post" else "پیک موتوری (پس‌کرایه)"
+    shipping_line = f"روش ارسال: {shipping_label}"
+    shipping_line += " — هزینه پیک در محل تحویل از شما دریافت می‌شود." if is_cod else f" ({toman(shipping_cost)})"
 
     summary = (
         cart_summary_text(cart) + "\n\n"
         f"کد فروش: {context.user_data.get('vendor_code') or 'ندارد'}\n"
         f"کد تخفیف: {context.user_data.get('discount_code') or 'ندارد'}"
         + (f" (- {toman(discount_amount)})" if discount_amount else "") + "\n"
-        f"روش ارسال: {SHIPPING[method]['label']} ({toman(shipping_cost)})\n"
-        f"استان/شهر: {context.user_data['province']} / {context.user_data['city']}\n"
-        f"آدرس: {context.user_data['address']}\n\n"
-        f"💰 مبلغ قابل پرداخت: {toman(total)}"
+        f"{shipping_line}\n"
+        f"استان/شهر: {province} / {context.user_data['city']}\n"
+        f"آدرس: {context.user_data['address']}\n"
+        f"تلفن: {context.user_data['phone']}\n\n"
+        f"💰 مبلغ قابل پرداخت آنلاین: {toman(total)}"
+        + ("\n(هزینه پیک جدا و نقدی است)" if is_cod else "")
     )
     keyboard = InlineKeyboardMarkup(
         [[InlineKeyboardButton("✅ تایید و ادامه به پرداخت", callback_data="confirm"),
@@ -268,17 +347,22 @@ async def confirm_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     d = context.user_data
     cart = d["cart"]
-    items_text = "؛ ".join(f"{db.get_product(pid)['name']} × {qty}" for pid, qty in cart.items())
+    items = [{"name": db.get_product(pid)["name"], "qty": qty, "price": db.get_product(pid)["price"]} for pid, qty in cart.items()]
+    items_text = "؛ ".join(f"{it['name']} × {it['qty']}" for it in items)
+
     order_id = db.create_order({
         "user_id": update.effective_user.id,
         "username": update.effective_user.username or update.effective_user.first_name,
+        "phone": d.get("phone", ""),
         "items_text": items_text,
+        "items": items,
         "subtotal": d["subtotal"],
         "vendor_code": d.get("vendor_code"),
         "discount_code": d.get("discount_code"),
         "discount_amount": d.get("discount_amount", 0),
         "shipping_method": d["shipping_method"],
         "shipping_cost": d["shipping_cost"],
+        "shipping_cod": d.get("shipping_cod", False),
         "total": d["total"],
         "province": d["province"],
         "city": d["city"],
@@ -292,6 +376,16 @@ async def confirm_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"💳 {CARD_NUMBER}\n👤 به نام: {CARD_HOLDER}\n\n"
         "سپس عکس رسید یا فیش واریزی را همین‌جا برای ما ارسال کنید."
     )
+
+    # let the admin know a cart/order started even before payment proof arrives
+    if ADMIN_CHAT_ID:
+        await context.bot.send_message(
+            ADMIN_CHAT_ID,
+            f"🕐 سفارش #{order_id} ثبت شد و در انتظار پرداخت است (هنوز فیش ارسال نشده).\n"
+            f"مشتری: @{context.user_data.get('username') or update.effective_user.username or update.effective_user.first_name}\n"
+            f"مبلغ: {toman(d['total'])}\n"
+            f"برای دیدن همه سفارش‌های ناقص: /pending_orders"
+        )
     return WAIT_RECEIPT
 
 
@@ -311,13 +405,15 @@ async def receive_receipt(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
     if ADMIN_CHAT_ID:
+        shipping_label = "پست پیشتاز" if order["shipping_method"] == "post" else "پیک موتوری (پس‌کرایه)"
         caption = (
             f"🧾 رسید پرداخت سفارش #{order_id}\n\n"
             f"مشتری: @{order['username']}\n"
+            f"تلفن: {order['phone']}\n"
             f"اقلام: {order['items_text']}\n"
             f"کد فروش: {order['vendor_code'] or 'ندارد'}\n"
             f"کد تخفیف: {order['discount_code'] or 'ندارد'}\n"
-            f"ارسال: {SHIPPING[order['shipping_method']]['label']}\n"
+            f"ارسال: {shipping_label}\n"
             f"مقصد: {order['province']}، {order['city']}، {order['address']}\n"
             f"💰 مبلغ: {toman(order['total'])}"
         )
@@ -372,7 +468,9 @@ async def admin_help(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "/set_price شناسه|قیمت_جدید\n"
         "/add_vendor نام|کد|درصد_کمیسیون\n"
         "/list_vendors\n"
-        "/add_discount کد|درصد|کد_ویزیتور(اختیاری)"
+        "/add_discount کد|درصد|کد_فروشنده(اختیاری)\n"
+        "/pending_orders — سفارش‌های ناقص (پرداخت‌نشده)\n"
+        "/stats — آمار فروش"
     )
 
 
@@ -422,7 +520,7 @@ async def add_vendor_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         name, code, rate = update.message.text.split(" ", 1)[1].split("|")
         db.add_vendor(name.strip(), code.strip(), float(rate.strip()))
-        await update.message.reply_text(f"ویزیتور «{name.strip()}» با کد {code.strip().upper()} اضافه شد.")
+        await update.message.reply_text(f"فروشنده «{name.strip()}» با کد {code.strip().upper()} اضافه شد.")
     except Exception:
         await update.message.reply_text("فرمت درست: /add_vendor نام|کد|درصد_کمیسیون")
 
@@ -431,7 +529,7 @@ async def list_vendors_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not is_admin(update):
         return
     lines = [f"{v['name']} — {v['code']} — {v['commission_rate']}٪" for v in db.list_vendors()]
-    await update.message.reply_text("\n".join(lines) or "ویزیتوری ثبت نشده.")
+    await update.message.reply_text("\n".join(lines) or "فروشنده‌ای ثبت نشده.")
 
 
 async def add_discount_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -444,7 +542,39 @@ async def add_discount_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
         db.add_discount(code, percent, vendor_code)
         await update.message.reply_text(f"کد تخفیف «{code.upper()}» ({percent}٪) فعال شد.")
     except Exception:
-        await update.message.reply_text("فرمت درست: /add_discount کد|درصد|کد_ویزیتور(اختیاری)")
+        await update.message.reply_text("فرمت درست: /add_discount کد|درصد|کد_فروشنده(اختیاری)")
+
+
+async def pending_orders_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not is_admin(update):
+        return
+    rows = db.pending_orders()
+    if not rows:
+        await update.message.reply_text("هیچ سفارش ناقص/پرداخت‌نشده‌ای وجود ندارد. ✅")
+        return
+    lines = ["🕐 سفارش‌های ناقص (پرداخت یا فیش هنوز ثبت نشده):\n"]
+    for o in rows:
+        lines.append(
+            f"#{o['id']} — @{o['username']} — {toman(o['total'])} — {o['created_at']}"
+        )
+    await update.message.reply_text("\n".join(lines))
+
+
+async def stats_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not is_admin(update):
+        return
+    s = db.get_stats()
+    text = (
+        "📊 آمار فروش B.U.Nou\n\n"
+        f"کل فروش (تعداد سفارش تایید‌شده): {s['order_count']}\n"
+        f"مجموع فروش به تومان: {toman(s['total_toman'])}\n\n"
+        f"پرفروش‌ترین فروشنده: "
+        + (f"{s['top_vendor_name']} ({s['top_vendor_code']}) — {toman(s['top_vendor_amount'])}" if s["top_vendor_name"] else "هنوز فروشی با کد فروشنده ثبت نشده")
+        + "\n\n"
+        f"پرفروش‌ترین محصول: "
+        + (f"{s['top_product_name']} — {s['top_product_qty']} عدد" if s["top_product_name"] else "هنوز فروشی ثبت نشده")
+    )
+    await update.message.reply_text(text)
 
 
 def main():
@@ -468,6 +598,7 @@ def main():
             ASK_PROVINCE: [MessageHandler(filters.TEXT & ~filters.COMMAND, ask_province)],
             ASK_CITY: [MessageHandler(filters.TEXT & ~filters.COMMAND, ask_city)],
             ASK_ADDRESS: [MessageHandler(filters.TEXT & ~filters.COMMAND, ask_address)],
+            ASK_PHONE: [MessageHandler(filters.TEXT & ~filters.COMMAND, ask_phone)],
             ASK_SHIPPING: [CallbackQueryHandler(ask_shipping)],
             CONFIRM: [CallbackQueryHandler(confirm_order)],
             WAIT_RECEIPT: [MessageHandler(filters.PHOTO, receive_receipt)],
@@ -485,6 +616,8 @@ def main():
     app.add_handler(CommandHandler("add_vendor", add_vendor_cmd))
     app.add_handler(CommandHandler("list_vendors", list_vendors_cmd))
     app.add_handler(CommandHandler("add_discount", add_discount_cmd))
+    app.add_handler(CommandHandler("pending_orders", pending_orders_cmd))
+    app.add_handler(CommandHandler("stats", stats_cmd))
 
     log.info("Bot starting (polling)...")
     app.run_polling()
